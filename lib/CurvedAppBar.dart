@@ -12,7 +12,7 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
 //Widget with preferred size
   @override
   //Height of PreferredSize widget
-  final Size preferredSize = Size.fromHeight(100.0);
+  final Size preferredSize = Size.fromHeight(140.0);
 
   @override
   Widget build(BuildContext context) {
