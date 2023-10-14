@@ -19,7 +19,7 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
     return ClipPath(
       clipper: AppBarClipper(),
       child: Container(
-        height: 100.0,
+        height: 140.0,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.lightBlue.shade400, Colors.lightBlue.shade900],
