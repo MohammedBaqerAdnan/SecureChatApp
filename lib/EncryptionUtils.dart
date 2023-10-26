@@ -16,10 +16,11 @@ String vigenere(String text, String key, int encrypt) {
       // Decryption:
     }
 //if iteration end rest otherwise increment j to go over the k
-    if (j < key.length - 1)
+    if (j < key.length - 1) {
       j++;
-    else
+    } else {
       j = 0;
+    }
   }
   return result;
 }
