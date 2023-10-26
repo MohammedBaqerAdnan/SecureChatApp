@@ -42,3 +42,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+node_modules/
+*.log
+package-lock.json
+package.json
+.wwebjs_cache/2.2346.52.html
+lib/TestSendRecieveMessages.py
