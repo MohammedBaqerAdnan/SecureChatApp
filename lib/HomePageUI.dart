@@ -1,12 +1,11 @@
 //define the main structure and functionality secure chat and provide UI
 
 import 'package:flutter/material.dart';
-import 'AppBarClipper.dart';
 import 'CurvedAppBar.dart';
 
 //title for the appbar
 class HomePage extends StatefulWidget {
-  HomePage({Key? key, required this.title}) : super(key: key);
+  const HomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
@@ -19,7 +18,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: CurvedAppBar(title: widget.title),
       body: SingleChildScrollView(
-        child: Container(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height -
               kToolbarHeight -
               kBottomNavigationBarHeight,
@@ -31,7 +30,7 @@ class _HomePageState extends State<HomePage> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: [0.1, 1],
+                    stops: const [0.1, 1],
                     colors: [
                       Colors.blueGrey.shade50,
                       Colors.blueGrey.shade200,
@@ -46,7 +45,7 @@ class _HomePageState extends State<HomePage> {
                     Align(
                       alignment: Alignment.topCenter,
                       child: Padding(
-                        padding: EdgeInsets.all(10.0),
+                        padding: const EdgeInsets.all(10.0),
                         child: Image.asset(
                           'assets/images/Yaru-Pink.jpg',
                           fit: BoxFit.cover,
@@ -60,7 +59,7 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(
+                            const Text(
                               'Start Your Secure Chat',
                               style: TextStyle(
                                 color: Colors.black,
@@ -70,32 +69,32 @@ class _HomePageState extends State<HomePage> {
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: 50),
+                            const SizedBox(height: 50),
                             ElevatedButton.icon(
                               style: ButtonStyle(
                                 backgroundColor:
                                     MaterialStateProperty.all<Color>(
                                         Colors.lightBlue.shade400),
                                 padding: MaterialStateProperty.all<EdgeInsets>(
-                                    EdgeInsets.symmetric(
+                                    const EdgeInsets.symmetric(
                                         horizontal: 30, vertical: 10)),
                               ),
                               onPressed: () {
                                 // Functionality to navigate to Encryption page
                               },
-                              icon: Icon(Icons.lock_rounded, size: 30),
-                              label: Text('Encrypt Message',
+                              icon: const Icon(Icons.lock_rounded, size: 30),
+                              label: const Text('Encrypt Message',
                                   style: TextStyle(
                                       fontSize: 20, color: Colors.white)),
                             ),
-                            SizedBox(height: 20),
+                            const SizedBox(height: 20),
                             OutlinedButton.icon(
                               style: ButtonStyle(
                                 backgroundColor:
                                     MaterialStateProperty.all<Color>(
                                         Colors.transparent),
                                 padding: MaterialStateProperty.all<EdgeInsets>(
-                                    EdgeInsets.symmetric(
+                                    const EdgeInsets.symmetric(
                                         horizontal: 30, vertical: 10)),
                                 side: MaterialStateProperty.all<BorderSide>(
                                     BorderSide(
@@ -112,8 +111,8 @@ class _HomePageState extends State<HomePage> {
                                       fontSize: 20,
                                       color: Colors.lightBlue.shade400)),
                             ),
-                            SizedBox(height: 20),
-                            Icon(Icons.favorite),
+                            const SizedBox(height: 20),
+                            const Icon(Icons.favorite),
                           ],
                         ),
                       ),
