@@ -7,12 +7,12 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
   //title of the AppBar
   final String title;
   //constructor for the CurvedAppBar take title as parameter
-  CurvedAppBar({required this.title});
+  const CurvedAppBar({super.key, required this.title});
 
 //Widget with preferred size
   @override
   //Height of PreferredSize widget
-  final Size preferredSize = Size.fromHeight(140.0);
+  final Size preferredSize = const Size.fromHeight(140.0);
 
   @override
   Widget build(BuildContext context) {
@@ -32,18 +32,18 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
           backgroundColor: Colors.transparent,
           //no shadow
           elevation: 0,
-          title: Text(title, style: TextStyle(fontSize: 24)),
+          title: Text(title, style: const TextStyle(fontSize: 24)),
           centerTitle: true,
           //button at the right of the appbar
           actions: [
             IconButton(
-              icon: Icon(Icons.settings),
+              icon: const Icon(Icons.settings),
               onPressed: () {
                 // Handle app settings
               },
             ),
             IconButton(
-              icon: Icon(Icons.add),
+              icon: const Icon(Icons.add),
               onPressed: () {
                 // Handle new icon button press
               },
