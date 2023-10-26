@@ -3,11 +3,13 @@ import 'HomePageUI.dart';
 
 // The main function is the entry point of the application.
 void main() {
-  runApp(SecureChatApp());
+  runApp(const SecureChatApp());
 }
 
 // SecureChatApp is the root widget of the application.
 class SecureChatApp extends StatelessWidget {
+  const SecureChatApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     // MaterialApp is the top-level widget which provides theming.
@@ -22,7 +24,7 @@ class SecureChatApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       // HomePage is the default route of the application.
-      home: HomePage(title: 'Secure Chat App'),
+      home: const HomePage(title: 'Secure Chat App'),
     );
   }
 }
