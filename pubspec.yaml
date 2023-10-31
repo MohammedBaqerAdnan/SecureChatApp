@@ -36,6 +36,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   url_launcher: ^6.1.14
   reflex: ^0.0.2
+  # flutter_webview_plugin: ^0.4.0
+  # fluttertoast: ^8.0.8
+  http: ^1.1.0
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
