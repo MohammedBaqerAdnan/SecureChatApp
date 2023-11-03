@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,11 +19,14 @@ class _MyAppState extends State<MyApp> {
   String qrData = 'Loading QR Data...';
   List<Map<String, dynamic>> messages = [];
   Timer? timer;
-  String ipAddrssForAPI = 'http://192.168.100.7:3000';
+  String ipAddressForAPI = 'http://192.168.100.7:3000';
+  final TextEditingController msgController =
+      TextEditingController(); // use this controller to get the input text
 
   @override
   void initState() {
     super.initState();
+    initializeWhatsAppClient();
     getQrData();
     getMessages();
     timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
@@ -33,8 +37,44 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> initializeWhatsAppClient() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool firstTime = prefs.getBool('firstTime') ?? true;
+    if (firstTime) {
+      try {
+        final response = await http.get(
+          Uri.parse('${ipAddressForAPI}/start-whatsapp'),
+        );
+        print('WhatsApp client started: ${response.body}');
+        await prefs.setBool('firstTime', false);
+      } catch (e) {
+        print('Error occurred: $e');
+      }
+    }
+  }
+
+  void sendWhatsAppMessage(String number, String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ipAddressForAPI}/send-message'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'num':
+              number, // replace this with the WhatsApp number you want to send to
+          'message': message,
+        }),
+      );
+      print('Message sent: ${response.body}');
+    } catch (e) {
+      print('Error occurred: $e');
+    }
+  }
+
   @override
   void dispose() {
+    msgController.dispose();
     timer?.cancel();
     super.dispose();
   }
@@ -42,7 +82,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> getQrData() async {
     try {
       final response = await http.get(
-        Uri.parse('${ipAddrssForAPI}/get-qr'),
+        Uri.parse('${ipAddressForAPI}/get-qr'),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -59,7 +99,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> getMessages() async {
     try {
       final response = await http.get(
-        Uri.parse('${ipAddrssForAPI}/get-messages'),
+        Uri.parse('${ipAddressForAPI}/get-messages'),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -90,6 +130,20 @@ class _MyAppState extends State<MyApp> {
                     data: qrData,
                     version: QrVersions.auto,
                     size: 200.0,
+                  ),
+                  TextField(
+                    controller:
+                        msgController, // use this controller to get the input text
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Enter message',
+                    ),
+                  ),
+                  TextButton(
+                    child: Text('Send'),
+                    onPressed: () {
+                      sendWhatsAppMessage('97336064978', msgController.text);
+                    },
                   ),
                   Expanded(
                     child: ListView.builder(
