@@ -1,588 +1,21 @@
-/*
 import 'dart:async';
 import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String qrData = 'Loading QR Data...';
-  List<Map<String, dynamic>> messages = [];
-  Timer? timer;
-  String ipAddressForAPI = 'http://192.168.100.7:3000';
-  final TextEditingController msgController =
-      TextEditingController(); // use this controller to get the input text
-  String userID = 'user1'; // Add user's ID here
-
-  @override
-  void initState() {
-    super.initState();
-    initializeWhatsAppClient();
-    getQrData(userID);
-    getMessages();
-    timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-      getMessages();
-    });
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-      getQrData(userID);
-    });
-  }
-
-/*
-  Future<void> initializeWhatsAppClient() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool firstTime = prefs.getBool('firstTime') ?? true;
-    if (firstTime) {
-      try {
-        final response = await http.post(
-          Uri.parse('${ipAddressForAPI}/start-whatsapp'),
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String, String>{
-            'userID': userID,
-          }),
-        );
-        print('WhatsApp client started: ${response.body}');
-        await prefs.setBool('firstTime', false);
-      } catch (e) {
-        print('Error occurred: $e');
-      }
-    }
-  }
-*/
-
-  Future<void> initializeWhatsAppClient() async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ipAddressForAPI}/start-whatsapp'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'userID': userID,
-        }),
-      );
-      print('WhatsApp client started: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  void sendWhatsAppMessage(String number, String message) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ipAddressForAPI}/send-message'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'userID': userID,
-          'num': number,
-          'message': message,
-        }),
-      );
-      print('Message sent: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  void dispose() {
-    msgController.dispose();
-    timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> getQrData(String userId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-qr?userID=' + userId),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          qrData = jsonDecode(response.body)['qr'];
-        });
-      } else {
-        print('Failed to load QR Code.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-/*
-Future getQrCode(String userId) async {
-    final response = await http.get(
-      Uri.parse('http://your_server_address/get-qr?userID=' + userId),
-    );
-
-    if (response.statusCode == 200) {
-      // If the server returns a 200 OK response,
-      // then parse the JSON.
-      return jsonDecode(response.body);
-    } else {
-      // If the server returns an unexpected response,
-      // then throw an exception.
-      throw Exception('Failed to get QR code');
-    }
-}
-
-*/
-
-  Future<void> getMessages() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-messages'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          messages.addAll(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['messages'],
-          ));
-        });
-      } else {
-        print('Failed to load Messages.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('WhatsApp QR Demo'),
-        ),
-        body: qrData == 'Loading QR Data...'
-            ? CircularProgressIndicator()
-            : Column(
-                children: [
-                  QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  TextField(
-                    controller:
-                        msgController, // use this controller to get the input text
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter message',
-                    ),
-                  ),
-                  TextButton(
-                    child: Text('Send'),
-                    onPressed: () {
-                      sendWhatsAppMessage('97333057881', msgController.text);
-                    },
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(messages[index]['body']),
-                          subtitle: Text(
-                              'From: ${messages[index]['from']}\nTime: ${messages[index]['time']}'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-*/
-
-// original solution with single user
-/*
-
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String qrData = 'Loading QR Data...';
-  List<Map<String, dynamic>> messages = [];
-  Timer? timer;
-  String ipAddressForAPI = 'http://192.168.100.11:3000';
-  final TextEditingController msgController =
-      TextEditingController(); // use this controller to get the input text
-
-  @override
-  void initState() {
-    super.initState();
-    initializeWhatsAppClient();
-    getQrData();
-    getMessages();
-    timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-      getMessages();
-    });
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-      getQrData();
-    });
-  }
-
-  // Future<void> initializeWhatsAppClient() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   bool firstTime = prefs.getBool('firstTime') ?? true;
-  //   if (firstTime) {
-  //     try {
-  //       final response = await http.get(
-  //         Uri.parse('${ipAddressForAPI}/start-whatsapp'),
-  //       );
-  //       print('WhatsApp client started: ${response.body}');
-  //       await prefs.setBool('firstTime', false);
-  //     } catch (e) {
-  //       print('Error occurred: $e');
-  //     }
-  //   }
-  // }
-
-  Future<void> initializeWhatsAppClient() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/start-whatsapp'),
-      );
-      print('WhatsApp client started: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  void sendWhatsAppMessage(String number, String message) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ipAddressForAPI}/send-message'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'num':
-              number, // replace this with the WhatsApp number you want to send to
-          'message': message,
-        }),
-      );
-      print('Message sent: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  void dispose() {
-    msgController.dispose();
-    timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> getQrData() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-qr'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          qrData = jsonDecode(response.body)['qr'];
-        });
-      } else {
-        print('Failed to load QR Code.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  Future<void> getMessages() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-messages'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          messages.addAll(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['messages'],
-          ));
-        });
-      } else {
-        print('Failed to load Messages.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('WhatsApp QR Demo'),
-        ),
-        body: qrData == 'Loading QR Data...'
-            ? CircularProgressIndicator()
-            : Column(
-                children: [
-                  QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  TextField(
-                    controller:
-                        msgController, // use this controller to get the input text
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter message',
-                    ),
-                  ),
-                  TextButton(
-                    child: Text('Send'),
-                    onPressed: () {
-                      sendWhatsAppMessage('97336064978', msgController.text);
-                    },
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(messages[index]['body']),
-                          subtitle: Text(
-                              'From: ${messages[index]['from']}\nTime: ${messages[index]['time']}'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-*/
-
-// with uniqueId solution to achive multiple users
-/*
-import 'dart:async';
-import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String qrData = 'Loading QR Data...';
-  List<Map<String, dynamic>> messages = [];
-  Timer? timer;
-  String ipAddressForAPI = 'http://192.168.100.10:3000';
-  final TextEditingController msgController =
-      TextEditingController(); // use this controller to get the input text
-  String uniqueId = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _setupUniqueId().then((_) {
-      // It is necessary to complete this before moving onto the next step
-      initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
-    });
-    getQrData();
-    getMessages();
-    timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-      getMessages();
-    });
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-      getQrData();
-    });
-  }
-
-// Now _setupUniqueId is an async function and it return a Future
-  Future<void> _setupUniqueId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    uniqueId = prefs.getString('uniqueId') ?? Uuid().v1();
-    prefs.setString('uniqueId', uniqueId);
-  }
-
-  Future<void> initializeWhatsAppClient() async {
-    print('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId');
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId'),
-      );
-      print('WhatsApp client started: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  void sendWhatsAppMessage(String number, String message) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ipAddressForAPI}/send-message?userId=$uniqueId'),
-        headers: <String, String>{
-          'Content-Type': 'application/json;charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'num':
-              number, // replace this with the WhatsApp number you want to send to
-          'message': message,
-        }),
-      );
-      print('Message sent: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  void dispose() {
-    msgController.dispose();
-    timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> getQrData() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-qr?userId=$uniqueId'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          qrData = jsonDecode(response.body)['qr'];
-        });
-      } else {
-        print('Failed to load QR Code.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  Future<void> getMessages() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-messages?userId=$uniqueId'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          messages.addAll(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['messages'],
-          ));
-        });
-      } else {
-        print('Failed to load Messages.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('WhatsApp QR Demo'),
-        ),
-        body: qrData == 'Loading QR Data...'
-            ? CircularProgressIndicator()
-            : Column(
-                children: [
-                  QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  TextField(
-                    controller:
-                        msgController, // use this controller to get the input text
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter message',
-                    ),
-                  ),
-                  TextButton(
-                    child: Text('Send'),
-                    onPressed: () {
-                      sendWhatsAppMessage('97336064978', msgController.text);
-                    },
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(messages[index]['body']),
-                          subtitle: Text(
-                              'From: ${messages[index]['from']}\nTime: ${messages[index]['time']}'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-*/
-
-///////
-
-import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
-import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'dart:io';
+import 'EncryptionUtils.dart';
+
+//
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:contacts_service/contacts_service.dart';
+//
 
 void main() {
   runApp(AppController(child: MyApp()));
@@ -600,83 +33,6 @@ class AppController extends StatefulWidget {
   @override
   _AppControllerState createState() => _AppControllerState();
 }
-
-///
-
-// class KeepAliveExpansionTile extends StatefulWidget {
-//   final String number;
-//   final List<Map<String, dynamic>> messages;
-
-//   KeepAliveExpansionTile({required this.number, required this.messages});
-
-//   @override
-//   _KeepAliveExpansionTileState createState() => _KeepAliveExpansionTileState();
-// }
-
-// class _KeepAliveExpansionTileState extends State<KeepAliveExpansionTile>
-//     with AutomaticKeepAliveClientMixin {
-//   final cacheManager = DefaultCacheManager();
-
-//   @override
-//   bool get wantKeepAlive => true;
-
-//   Future<File> _loadImage(int index, [String? base64String]) async {
-//     if (base64String == null) {
-//       // If the base64String is null, return a placeholder image
-//       return File('assets/images/placeholder.jpg');
-//     }
-
-//     final filename = '$index.jpg';
-//     Directory tempDir = await getTemporaryDirectory();
-//     String tempPath = tempDir.path;
-//     File file = File('$tempPath/$filename');
-
-//     bool fileExists = await file.exists();
-
-//     if (!fileExists) {
-//       final bytes = base64Decode(base64String);
-//       file = await file.writeAsBytes(bytes);
-//     }
-
-//     return file;
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     super.build(context); // This is required if wantKeepAlive is overridden.
-//     return ExpansionTile(
-//       key: PageStorageKey<String>(widget.number),
-//       title: Text(widget.number),
-//       children: widget.messages.asMap().entries.map((entry) {
-//         int index = entry.key;
-//         Map<String, dynamic> message = entry.value;
-//         return FutureBuilder<File>(
-//           future: _loadImage(
-//               index,
-//               message['media']?.contains(',') == true
-//                   ? message['media'].split(",")[1]
-//                   : null),
-//           builder: (BuildContext context, AsyncSnapshot<File> snapshot) {
-//             if (snapshot.connectionState == ConnectionState.done) {
-//               if (snapshot.hasError)
-//                 return Icon(Icons.error);
-//               else
-//                 return ListTile(
-//                   title: Text(message['body']),
-//                   subtitle: Text('At: ${message['time']}'),
-//                   trailing: Image.file(snapshot.data!),
-//                 );
-//             } else {
-//               return CircularProgressIndicator(); // Placeholder image or a loader until the image is decoded
-//             }
-//           },
-//         );
-//       }).toList(),
-//     );
-//   }
-// }
-
-///
 
 class _AppControllerState extends State<AppController> {
   Key key = UniqueKey();
@@ -763,6 +119,7 @@ class _MyAppState extends State<MyApp> {
   String ipAddressForAPI = 'http://192.168.100.10:3000';
   final TextEditingController msgController =
       TextEditingController(); // use this controller to get the input text
+  final TextEditingController vigenereKeyController = TextEditingController();
   String uniqueId = '';
   late SharedPreferences prefs;
 
@@ -771,23 +128,16 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     _isActive = true;
     super.initState();
-
     _setupUniqueId().then((_) {
-      // It is necessary to complete this before moving onto the next step
-      _loadState().then((_) {
-        //print unique id
-        print("Unique" + uniqueId);
-        initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
-        getMessages();
-        timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
+      _storeVigenereKey(vigenereKeyController.text).then((_) {
+        _loadState().then((_) {
+          print("Unique" + uniqueId);
+          initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
           getMessages();
+          timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
+            getMessages();
+          });
         });
-        // messageSubscription = getMessages().listen((newMessages) {
-        //   setState(() {
-        //     messages.addAll(newMessages);
-        //     prefs.setString('messages', jsonEncode(messages));
-        //   });
-        // });
       });
     });
     timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
@@ -795,11 +145,30 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  //   _setupUniqueId().then((_) {
+  //     // It is necessary to complete this before moving onto the next step
+  //     _loadState().then((_) {
+  //       //print unique id
+  //       print("Unique" + uniqueId);
+  //       initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
+  //       getMessages();
+  //       timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
+  //         getMessages();
+  //       });
+  //     });
+  //   });
+  //   timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+  //     getQrData();
+  //   });
+  // }
+
   Future<void> _loadState() async {
     prefs = await SharedPreferences.getInstance();
     uniqueId = prefs.getString('uniqueId') ?? '';
     messages = List<Map<String, dynamic>>.from(
         jsonDecode(prefs.getString('messages') ?? '[]'));
+    vigenereKeyController.text =
+        prefs.getString('vigenereKey') ?? ''; // Load the saved Vigenere key
   }
 
   Future<void> _setupUniqueId() async {
@@ -831,9 +200,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> resetInitialization() async {
-    // prefs.setBool('whatsappInitialized', false);
-    // print('WhatsApp initialization reset.');
-    // AppController.of(context)?.restartApp();
     // Call the reset endpoint
     final response = await http
         .get(Uri.parse('${ipAddressForAPI}/reset-whatsapp?userId=$uniqueId'));
@@ -847,6 +213,9 @@ class _MyAppState extends State<MyApp> {
 
   void sendWhatsAppMessage(String number, String message) async {
     try {
+      // Encrypt the message before sending
+      String encryptedMessage =
+          vigenere(message, vigenereKeyController.text, 1);
       final response = await http.post(
         Uri.parse('${ipAddressForAPI}/send-message?userId=$uniqueId'),
         headers: <String, String>{
@@ -855,7 +224,7 @@ class _MyAppState extends State<MyApp> {
         body: jsonEncode(<String, String>{
           'num':
               number, // replace this with the WhatsApp number you want to send to
-          'message': message,
+          'message': encryptedMessage,
         }),
       );
       print('Message sent: ${response.body}');
@@ -868,6 +237,7 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _isActive = false;
     msgController.dispose();
+    vigenereKeyController.dispose();
     timer?.cancel();
     super.dispose();
   }
@@ -903,6 +273,15 @@ class _MyAppState extends State<MyApp> {
         );
         if (_isActive && mounted) {
           setState(() {
+            // Decrypt each message
+            print("Vigenere key: " + vigenereKeyController.text);
+            newMessages.forEach((message) {
+              print('Encrypted: ${message['body']}');
+              message['body'] =
+                  vigenere(message['body'], vigenereKeyController.text, 0);
+              print('Decrypted: ${message['body']}');
+            });
+            print("New messages: " + newMessages.toString());
             messages.addAll(newMessages.where((i) => !messages.contains(i)));
             prefs.setString('messages', jsonEncode(messages));
           });
@@ -915,11 +294,216 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<String> saveImage(String base64Image) async {
+    var dir = await getApplicationDocumentsDirectory();
+    var imageName = Uuid().v1();
+    String imagePath = '${dir.path}/$imageName.png';
+
+    var imageBytes = base64Decode(base64Image.split(",")[1]);
+    var result = await FlutterImageCompress.compressWithList(
+      imageBytes,
+      minWidth: 1080,
+      minHeight: 1920,
+      quality: 96,
+      rotate: 0, // adjust this line, rotate: 0 instead of rotate: 180
+    );
+
+    final writeImageCreation = File(imagePath).writeAsBytes(result);
+    await writeImageCreation;
+    // confirm image write to local storage
+    if (await File(imagePath).exists()) {
+      return imagePath;
+    } else {
+      throw Exception('Save image failed.');
+    }
+  }
+
+  //
+  Future<Iterable<Contact>> getDeviceContacts() async {
+    final PermissionStatus permissionStatus = await _getContactPermission();
+    if (permissionStatus == PermissionStatus.granted) {
+      return await ContactsService.getContacts();
+    } else {
+      _handleInvalidPermissions(permissionStatus);
+    }
+    return [];
+  }
+
+  Future<PermissionStatus> _getContactPermission() async {
+    PermissionStatus permission = await Permission.contacts.status;
+    if (permission != PermissionStatus.granted &&
+        permission != PermissionStatus.denied) {
+      final Map<Permission, PermissionStatus> permissionStatus =
+          await [Permission.contacts].request();
+      return permissionStatus[Permission.contacts] ?? PermissionStatus.limited;
+    } else {
+      return permission;
+    }
+  }
+
+  void _handleInvalidPermissions(PermissionStatus permissionStatus) {
+    if (permissionStatus == PermissionStatus.denied) {
+      throw PlatformException(
+          code: "PERMISSION_DENIED",
+          message: "Access to contact data denied",
+          details: null);
+    } else if (permissionStatus == PermissionStatus.permanentlyDenied) {
+      throw PlatformException(
+          code: "PERMISSION_PERMANENTLY_DENIED",
+          message: "Contact data not allowed",
+          details: null);
+    }
+  }
+
+  void selectContactAndSendWhatsAppMessage(String message) async {
+    Iterable<Contact> contacts = await getDeviceContacts();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('Select a Contact'),
+        content: Container(
+          width: double.maxFinite,
+          child: ListView(
+            children: contacts.map<Widget>((contact) {
+              return ListTile(
+                title: Text(contact.displayName!),
+                onTap: () {
+                  Navigator.pop(context);
+                  // Assuming the country code is for Bahrain (973)
+                  var countryCode = "973";
+                  // Obtaining the phone number, eliminating all spaces and any preceding 973
+                  var phoneNumber = contact.phones!.first.value!
+                      .replaceAll(" ", "")
+                      .replaceFirst("+973", "")
+                      .replaceFirst("973", "");
+
+                  // Unconditionally prepend our own 973 since we've just removed any existing ones
+                  phoneNumber = countryCode + phoneNumber;
+
+                  print("DODO");
+                  print("Selected phone number is " + phoneNumber);
+
+                  // Then pass the updated phone number to the sendWhatsAppMessage method
+                  sendWhatsAppMessage(phoneNumber, message);
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String selectedContactNumber = '';
+
+  void selectContact() async {
+    Iterable<Contact> contacts = await getDeviceContacts();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text('Select a Contact'),
+        content: Container(
+          width: double.maxFinite,
+          child: ListView(
+            children: contacts.map<Widget>((contact) {
+              return ListTile(
+                title: Text(contact.displayName!),
+                onTap: () {
+                  var countryCode = "973";
+                  var phoneNumber = contact.phones!.first.value!
+                      .replaceAll(" ", "")
+                      .replaceFirst("+973", "")
+                      .replaceFirst("973", "");
+
+                  phoneNumber = countryCode + phoneNumber;
+
+                  selectedContactNumber = phoneNumber;
+
+                  print("Selected contact number is " + selectedContactNumber);
+
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+  //
+
+// This function will return the local file path if it exists,
+// else it will download the image, save it to local storage, and then return the local file path.
+  Future<String> getLocalImagePath(String base64Image) async {
+    // Create a hash of the base64 image string to use as a unique lookup key
+    var base64ImageHash = base64Image.hashCode;
+
+    // Check if the image path is already saved
+    String? savedImagePath = prefs.getString(base64ImageHash.toString());
+    if (savedImagePath != null && await File(savedImagePath).exists()) {
+      // If the image file already exists, then return the saved image path.
+      return savedImagePath;
+    } else {
+      // If the image file does not exist then save the image and return the new path.
+      String newImagePath = await saveImage(base64Image);
+      // Save the new image path
+      await prefs.setString(base64ImageHash.toString(), newImagePath);
+      return newImagePath;
+    }
+  }
+
+  Future<void> _storeVigenereKey(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedKey = prefs.getString('vigenereKey');
+    if (storedKey == null || storedKey.isEmpty) {
+      if (key.isNotEmpty) {
+        // Only store a new key if it is not empty
+        prefs.setString('vigenereKey', key);
+      }
+    }
+  }
+
   void clearMessages() {
     setState(() {
       messages.clear();
       prefs.setString('messages', jsonEncode(messages));
     });
+  }
+
+  //
+
+  //
+
+  void sendWhatsAppMediaMessage(String number, String message) async {
+    final picker = ImagePicker();
+    // final pickedFile = await picker.ImagePicker(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      try {
+        final response = await http.post(
+          Uri.parse('${ipAddressForAPI}/send-media-message?userId=$uniqueId'),
+          headers: <String, String>{
+            'Content-Type': 'application/json;charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'num': number,
+            'message': message,
+            'mediaBase64': base64Image
+          }),
+        );
+        print('Media message sent: ${response.body}');
+      } catch (e) {
+        print('Error occurred: $e');
+      }
+    } else {
+      print('No image selected.');
+    }
   }
 
   @override
@@ -948,6 +532,22 @@ class _MyAppState extends State<MyApp> {
                     version: QrVersions.auto,
                     size: 200.0,
                   ),
+                  TextFormField(
+                    controller: vigenereKeyController,
+                    decoration: InputDecoration(
+                      labelText: 'Enter a Vigenere key',
+                      fillColor: Colors.white,
+                      filled: true,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a Vigenere key';
+                      }
+                      return null;
+                    },
+                  ),
                   TextField(
                     controller:
                         msgController, // use this controller to get the input text
@@ -959,9 +559,39 @@ class _MyAppState extends State<MyApp> {
                   TextButton(
                     child: Text('Send'),
                     onPressed: () {
-                      sendWhatsAppMessage('97336064978', msgController.text);
+                      if (msgController.text.isNotEmpty &&
+                          selectedContactNumber.isNotEmpty) {
+                        sendWhatsAppMessage(
+                            selectedContactNumber, msgController.text);
+                      } else {
+                        print("No contact selected or message is empty.");
+                      }
                     },
                   ),
+                  TextButton(
+                    child: Text('Upload Image'),
+                    onPressed: () async {
+                      try {
+                        if (selectedContactNumber.isNotEmpty) {
+                          try {
+                            sendWhatsAppMediaMessage(selectedContactNumber, '');
+                          } catch (e) {
+                            print('No image selected. $e');
+                          }
+                        } else {
+                          print("No contact selected.");
+                        }
+                      } catch (e) {
+                        print('No image selected. $e');
+                      }
+                    },
+                  ),
+                  // Add a 'Select Contact' button in your UI
+                  ElevatedButton(
+                    onPressed: selectContact,
+                    child: Text('Select Contact'),
+                  ),
+
                   ElevatedButton(
                     onPressed: resetInitialization,
                     child: Text('Reset WhatsApp Initialization'),
@@ -975,36 +605,45 @@ class _MyAppState extends State<MyApp> {
                       itemCount: groupedMessages.keys.length,
                       itemBuilder: (context, index) {
                         String number = groupedMessages.keys.elementAt(index);
-                        return ExpansionTile(
-                          title: Text(number),
-                          children: groupedMessages[number]!.map((message) {
-                            return ListTile(
-                              title: message['media'] == null ||
-                                      !message['media'].contains(',')
-                                  ? Text(message['body'])
-                                  : Column(
-                                      children: <Widget>[
-                                        Text(message['body']),
-                                        Image.memory(base64Decode(
-                                            message['media'].split(",")[1])),
-                                      ],
-                                    ),
-                              subtitle: Text('At: ${message['time']}'),
+                        return FutureBuilder<List<Widget>>(
+                          future: Future.wait(
+                            groupedMessages[number]!.map((message) async {
+                              String? imagePath;
+                              if (message['media'] != null &&
+                                  message['media'].contains(',')) {
+                                // imagePath = await saveImage(message['media']);
+                                imagePath =
+                                    await getLocalImagePath(message['media']);
+                              }
+                              return ListTile(
+                                title: message['media'] == null ||
+                                        !message['media'].contains(',')
+                                    ? Text(message['body'])
+                                    : Column(
+                                        children: <Widget>[
+                                          Text(message['body']),
+                                          if (imagePath != null) ...[
+                                            Image.file(File(imagePath))
+                                          ],
+                                        ],
+                                      ),
+                                subtitle: Text('At: ${message['time']}'),
+                              );
+                            }).toList(),
+                          ),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<List<Widget>> snapshot) {
+                            if (!snapshot.hasData) {
+                              return CircularProgressIndicator();
+                            }
+                            return ExpansionTile(
+                              title: Text(number),
+                              children: snapshot.data!,
                             );
-                          }).toList(),
+                          },
                         );
                       },
                     ),
-                    // child: ListView.builder(
-                    //   itemCount: groupedMessages.keys.length,
-                    //   itemBuilder: (context, index) {
-                    //     String number = groupedMessages.keys.elementAt(index);
-                    //     return KeepAliveExpansionTile(
-                    //       number: number,
-                    //       messages: groupedMessages[number]!,
-                    //     );
-                    //   },
-                    // ),
                   )
                 ],
               ),
@@ -1012,267 +651,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-///// 2nd solution modified
-
-/*
-
-import 'dart:async';
-import 'dart:convert';
-import 'package:uuid/uuid.dart';
-import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String qrData = 'Loading QR Data...';
-  List<Map<String, dynamic>> messages = [];
-  Timer? timer;
-  String ipAddressForAPI = 'http://192.168.100.46:3000';
-  final TextEditingController msgController =
-      TextEditingController(); // use this controller to get the input text
-  String uniqueId = '';
-  late SharedPreferences prefs;
-
-  bool qrScanned = false; // add a boolean to track QR scanning status
-
-  @override
-  void initState() {
-    super.initState();
-    _setupUniqueId().then((_) {
-      // It is necessary to complete this before moving onto the next step
-      _loadState().then((_) {
-        //print unique id
-        print("Unique" + uniqueId);
-        if (uniqueId != '' && qrScanned) {
-          // check for successful QR scanning here
-          initializeWithRetry(); // Now userId = uniqueId should be defined.
-          getMessages();
-          timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-            getMessages();
-          });
-        }
-      });
-    });
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-      getQrData();
-    });
-  }
-
-  Future<void> _loadState() async {
-    prefs = await SharedPreferences.getInstance();
-    uniqueId = prefs.getString('uniqueId') ?? '';
-    messages = List<Map<String, dynamic>>.from(
-        jsonDecode(prefs.getString('messages') ?? '[]'));
-  }
-
-// Now _setupUniqueId is an async function and it return a Future
-  Future<void> _setupUniqueId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    uniqueId = prefs.getString('uniqueId') ?? Uuid().v1();
-    prefs.setString('uniqueId', uniqueId);
-  }
-
-  Future<bool> initializeWhatsAppClient() async {
-    final initialized = prefs.getBool('whatsappInitialized') ?? false;
-    if (!initialized) {
-      print('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId');
-      try {
-        final response = await http.get(
-          Uri.parse('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId'),
-        );
-        if (response.statusCode == 200) {
-          print('WhatsApp client started: ${response.body}');
-          prefs.setBool('whatsappInitialized', true);
-          return true;
-        } else {
-          print('Failed to initialize WhatsApp client');
-          return false;
-        }
-      } catch (e) {
-        print('Error occurred: $e');
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void initializeWithRetry() {
-    initializeWhatsAppClient().then((initSuccess) {
-      if (initSuccess) {
-        getMessages();
-        timer?.cancel(); // Cancel the QR fetching timer
-        timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-          getMessages();
-        });
-      } else {
-        print('Failed to initialize WhatsApp client, retrying in 10 seconds');
-        Timer(Duration(seconds: 10), initializeWithRetry);
-      }
-    });
-  }
-
-  void sendWhatsAppMessage(String number, String message) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ipAddressForAPI}/send-message?userId=$uniqueId'),
-        headers: <String, String>{
-          'Content-Type': 'application/json;charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'num':
-              number, // replace this with the WhatsApp number you want to send to
-          'message': message,
-        }),
-      );
-      print('Message sent: ${response.body}');
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  void dispose() {
-    msgController.dispose();
-    timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> getQrData() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-qr?userId=$uniqueId'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          qrData = jsonDecode(response.body)['qr'];
-        });
-      } else {
-        print('Failed to load QR Code.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  Future<void> getMessages() async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ipAddressForAPI}/get-messages?userId=$uniqueId'),
-      );
-      if (response.statusCode == 200) {
-        setState(() {
-          messages.addAll(List<Map<String, dynamic>>.from(
-            jsonDecode(response.body)['messages'],
-          ));
-          prefs.setString('messages', jsonEncode(messages));
-        });
-      } else {
-        print('Failed to load Messages.');
-      }
-    } catch (e) {
-      print('Error occurred: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('WhatsApp QR Demo'),
-        ),
-        body: qrData == 'Loading QR Data...'
-            ? CircularProgressIndicator()
-            : Column(
-                children: [
-                  QrImageView(
-                    data: qrData,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  TextField(
-                    controller:
-                        msgController, // use this controller to get the input text
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Enter message',
-                    ),
-                  ),
-                  TextButton(
-                    child: Text('Send'),
-                    onPressed: () {
-                      sendWhatsAppMessage('97335669580', msgController.text);
-                    },
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(messages[index]['body']),
-                          subtitle: Text(
-                              'From: ${messages[index]['from']}\nTime: ${messages[index]['time']}'),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-*/
