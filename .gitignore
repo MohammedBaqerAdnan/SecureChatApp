@@ -49,3 +49,4 @@ package-lock.json
 package.json
 .wwebjs_cache/2.2346.52.html
 lib/TestSendRecieveMessages.py
+.wwebjs_auth/*
