@@ -8,14 +8,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'EncryptionUtils.dart';
-
-//
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:contacts_service/contacts_service.dart';
-//
 
 void main() {
   runApp(AppController(child: MyApp()));
@@ -132,7 +129,7 @@ class _MyAppState extends State<MyApp> {
       _storeVigenereKey(vigenereKeyController.text).then((_) {
         _loadState().then((_) {
           print("Unique" + uniqueId);
-          initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
+          initializeWhatsAppClient();
           getMessages();
           timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
             getMessages();
@@ -144,23 +141,6 @@ class _MyAppState extends State<MyApp> {
       getQrData();
     });
   }
-
-  //   _setupUniqueId().then((_) {
-  //     // It is necessary to complete this before moving onto the next step
-  //     _loadState().then((_) {
-  //       //print unique id
-  //       print("Unique" + uniqueId);
-  //       initializeWhatsAppClient(); // Now userId = uniqueId should be defined.
-  //       getMessages();
-  //       timer = Timer.periodic(Duration(seconds: 2), (Timer t) {
-  //         getMessages();
-  //       });
-  //     });
-  //   });
-  //   timer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-  //     getQrData();
-  //   });
-  // }
 
   Future<void> _loadState() async {
     prefs = await SharedPreferences.getInstance();
@@ -186,7 +166,6 @@ class _MyAppState extends State<MyApp> {
   Future<void> initializeWhatsAppClient() async {
     final initialized = prefs.getBool('whatsappInitialized') ?? false;
     if (!initialized) {
-      print('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId');
       try {
         final response = await http.get(
           Uri.parse('${ipAddressForAPI}/start-whatsapp?userId=$uniqueId'),
@@ -274,14 +253,14 @@ class _MyAppState extends State<MyApp> {
         if (_isActive && mounted) {
           setState(() {
             // Decrypt each message
-            print("Vigenere key: " + vigenereKeyController.text);
+            // print("Vigenere key: " + vigenereKeyController.text);
             newMessages.forEach((message) {
-              print('Encrypted: ${message['body']}');
+              // print('Encrypted: ${message['body']}');
               message['body'] =
                   vigenere(message['body'], vigenereKeyController.text, 0);
-              print('Decrypted: ${message['body']}');
+              // print('Decrypted: ${message['body']}');
             });
-            print("New messages: " + newMessages.toString());
+            // print("New messages: " + newMessages.toString());
             messages.addAll(newMessages.where((i) => !messages.contains(i)));
             prefs.setString('messages', jsonEncode(messages));
           });
@@ -294,31 +273,109 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  Future<String> saveImage(String base64Image) async {
-    var dir = await getApplicationDocumentsDirectory();
-    var imageName = Uuid().v1();
-    String imagePath = '${dir.path}/$imageName.png';
+  // Future<String> saveImage(String base64Image) async {
+  //   var dir = await getApplicationDocumentsDirectory();
+  //   var imageName = Uuid().v1();
+  //   String imagePath = '${dir.path}/$imageName.png';
+  //   print("before split");
+  //   //print base64Image;
+  //   print("base64Image: " + base64Image);
+  //   print('Length of base64Image: ${base64Image.length}');
+  //   var imageBytes = base64Decode(base64Image.split(",")[1]);
+  //   // var imageBytes = base64Decode(base64Image);
 
-    var imageBytes = base64Decode(base64Image.split(",")[1]);
-    var result = await FlutterImageCompress.compressWithList(
-      imageBytes,
-      minWidth: 1080,
-      minHeight: 1920,
-      quality: 96,
-      rotate: 0, // adjust this line, rotate: 0 instead of rotate: 180
-    );
+  //   // var imageBytes = base64Decode(base64Image);
 
-    final writeImageCreation = File(imagePath).writeAsBytes(result);
-    await writeImageCreation;
-    // confirm image write to local storage
-    if (await File(imagePath).exists()) {
-      return imagePath;
-    } else {
-      throw Exception('Save image failed.');
-    }
+  //   if (imageBytes.isNotEmpty) {
+  //     var result = await FlutterImageCompress.compressWithList(
+  //       imageBytes,
+  //       minWidth: 1080,
+  //       minHeight: 1920,
+  //       quality: 96,
+  //       rotate: 0,
+  //     );
+
+  //     if (result.isEmpty) {
+  //       print('Error: Image compression failed.');
+  //       throw Exception('Image compression failed');
+  //     }
+
+  //     final writeImageCreation = File(imagePath).writeAsBytes(result);
+  //     await writeImageCreation;
+  //     if (await File(imagePath).exists()) {
+  //       return imagePath;
+  //     } else {
+  //       throw Exception('Save image failed.');
+  //     }
+  //   } else {
+  //     print("Error: Base64 image data could not be decoded.");
+  //     throw Exception('Base64 image data could not be decoded');
+  //   }
+  // }
+  // Future<String> saveImage(String base64Image) async {
+  //   try {
+  //     String imagePath;
+  //     print('Base64 Image for getLocalImagePath: $base64Image');
+
+  //     var dir = await getApplicationDocumentsDirectory();
+  //     var imageName = Uuid().v1();
+  //     imagePath = '${dir.path}/$imageName.png';
+
+  //     base64Image = base64Image.split(";base64,").last;
+  //     var imageBytes = Base64Decoder().convert(base64Image);
+
+  //     if (imageBytes.isNotEmpty) {
+  //       var result = await FlutterImageCompress.compressWithList(
+  //         imageBytes,
+  //         minWidth: 1080,
+  //         minHeight: 1920,
+  //         quality: 96,
+  //         rotate: 0,
+  //       );
+
+  //       if (result.isEmpty) {
+  //         print('Error: Image compression failed.');
+  //         return Future.error(Exception('Image compression failed'));
+  //       }
+
+  //       final imageFile = File(imagePath);
+  //       await imageFile.writeAsBytes(result);
+
+  //       if (await imageFile.exists()) {
+  //         return imagePath;
+  //       } else {
+  //         print('Error: Save image failed.');
+  //         return Future.error(Exception('Save image failed.'));
+  //       }
+  //     } else {
+  //       print("Error: Base64 image data could not be decoded.");
+  //       return Future.error(
+  //           Exception('Base64 image data could not be decoded'));
+  //     }
+  //   } on FormatException catch (e) {
+  //     print("FormatException: $e");
+  //     return Future.error(
+  //         Exception('Error occurred while decoding the base64 string'));
+  //   } on IOException catch (e) {
+  //     print("IOException: $e");
+  //     return Future.error(Exception('Error occurred while writing to file'));
+  //   } catch (e) {
+  //     print("Undefined Error: $e");
+  //     return Future.error(Exception('Undefined Error occurred: $e'));
+  //   }
+  // }
+  Future<String> _saveAndGetImagePath(String base64Image) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String imageName = Uuid().v1(); // Generating a unique id for image
+    String imagePath = '${dir.path}/$imageName.png'; // Define the path
+
+    // Let us decode the base64 string and write in the file
+    var bytes = base64Decode(base64Image);
+    await File(imagePath).writeAsBytes(bytes);
+
+    return imagePath;
   }
 
-  //
   Future<Iterable<Contact>> getDeviceContacts() async {
     final PermissionStatus permissionStatus = await _getContactPermission();
     if (permissionStatus == PermissionStatus.granted) {
@@ -332,7 +389,7 @@ class _MyAppState extends State<MyApp> {
   Future<PermissionStatus> _getContactPermission() async {
     PermissionStatus permission = await Permission.contacts.status;
     if (permission != PermissionStatus.granted &&
-        permission != PermissionStatus.denied) {
+        permission != PermissionStatus.permanentlyDenied) {
       final Map<Permission, PermissionStatus> permissionStatus =
           await [Permission.contacts].request();
       return permissionStatus[Permission.contacts] ?? PermissionStatus.limited;
@@ -343,15 +400,42 @@ class _MyAppState extends State<MyApp> {
 
   void _handleInvalidPermissions(PermissionStatus permissionStatus) {
     if (permissionStatus == PermissionStatus.denied) {
-      throw PlatformException(
-          code: "PERMISSION_DENIED",
-          message: "Access to contact data denied",
-          details: null);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Permission denied'),
+          content: const Text('You denied the contacts access permission.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => _getContactPermission(),
+              child: const Text('Ask Again'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Dismiss'),
+            ),
+          ],
+        ),
+      );
     } else if (permissionStatus == PermissionStatus.permanentlyDenied) {
-      throw PlatformException(
-          code: "PERMISSION_PERMANENTLY_DENIED",
-          message: "Contact data not allowed",
-          details: null);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Permission denied'),
+          content: const Text(
+              'Contact permission was denied permanently. Please grant access from App Settings.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => openAppSettings(),
+              child: const Text('Open App Settings'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Dismiss'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -380,9 +464,6 @@ class _MyAppState extends State<MyApp> {
 
                   // Unconditionally prepend our own 973 since we've just removed any existing ones
                   phoneNumber = countryCode + phoneNumber;
-
-                  print("DODO");
-                  print("Selected phone number is " + phoneNumber);
 
                   // Then pass the updated phone number to the sendWhatsAppMessage method
                   sendWhatsAppMessage(phoneNumber, message);
@@ -421,8 +502,6 @@ class _MyAppState extends State<MyApp> {
 
                   selectedContactNumber = phoneNumber;
 
-                  print("Selected contact number is " + selectedContactNumber);
-
                   Navigator.pop(context);
                 },
               );
@@ -432,22 +511,41 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
-  //
 
 // This function will return the local file path if it exists,
 // else it will download the image, save it to local storage, and then return the local file path.
+  // Future<String> getLocalImagePath(String base64Image) async {
+  //   // Create a hash of the base64 image string to use as a unique lookup key
+  //   var base64ImageHash = base64Image.hashCode;
+
+  //   // Check if the image path is already saved
+  //   String? savedImagePath = prefs.getString(base64ImageHash.toString());
+  //   if (savedImagePath != null && await File(savedImagePath).exists()) {
+  //     // If the image file already exists, then return the saved image path.
+  //     return savedImagePath;
+  //   } else {
+  //     // If the image file does not exist then save the image and return the new path.
+  //     print('Base64 Image for getLocalImagePath: $base64Image');
+  //     String newImagePath = await saveImage(base64Image);
+  //     // Save the new image path
+  //     await prefs.setString(base64ImageHash.toString(), newImagePath);
+  //     return newImagePath;
+  //   }
+  // }
   Future<String> getLocalImagePath(String base64Image) async {
     // Create a hash of the base64 image string to use as a unique lookup key
     var base64ImageHash = base64Image.hashCode;
 
-    // Check if the image path is already saved
+    // Check if the image in local storage is the same as the new image by comparing hashes
     String? savedImagePath = prefs.getString(base64ImageHash.toString());
+
+    // If the image in local storage is the same as the new image, then we return the saved image path
     if (savedImagePath != null && await File(savedImagePath).exists()) {
-      // If the image file already exists, then return the saved image path.
       return savedImagePath;
-    } else {
-      // If the image file does not exist then save the image and return the new path.
-      String newImagePath = await saveImage(base64Image);
+    }
+    // If the image in local storage is different from the new image, then we save the new image
+    else {
+      String newImagePath = await _saveAndGetImagePath(base64Image);
       // Save the new image path
       await prefs.setString(base64ImageHash.toString(), newImagePath);
       return newImagePath;
@@ -465,6 +563,33 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  Future<String> decryptImage(String imageData) async {
+    //print length of image data
+    // print('imageData length: ${imageData.length}');
+    // print('imageData: $imageData');
+    try {
+      final response = await http.post(
+        Uri.parse('${ipAddressForAPI}/decrypt-file'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'imageData': imageData,
+        }),
+      );
+      if (response.statusCode == 200) {
+        String decryptedData = jsonDecode(response.body)['imageData'];
+        String localImagePath = await getLocalImagePath(decryptedData);
+        return localImagePath;
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load post');
+      }
+    } catch (e) {
+      return ('Error occurred: $e');
+    }
+  }
+
   void clearMessages() {
     setState(() {
       messages.clear();
@@ -472,19 +597,13 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  //
-
-  //
-
   void sendWhatsAppMediaMessage(String number, String message) async {
     final picker = ImagePicker();
-    // final pickedFile = await picker.ImagePicker(source: ImageSource.gallery);
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-
       try {
         final response = await http.post(
           Uri.parse('${ipAddressForAPI}/send-media-message?userId=$uniqueId'),
@@ -494,9 +613,10 @@ class _MyAppState extends State<MyApp> {
           body: jsonEncode(<String, String>{
             'num': number,
             'message': message,
-            'mediaBase64': base64Image
+            'mediaBase64': base64Image,
           }),
         );
+
         print('Media message sent: ${response.body}');
       } catch (e) {
         print('Error occurred: $e');
@@ -609,11 +729,17 @@ class _MyAppState extends State<MyApp> {
                           future: Future.wait(
                             groupedMessages[number]!.map((message) async {
                               String? imagePath;
-                              if (message['media'] != null &&
-                                  message['media'].contains(',')) {
-                                // imagePath = await saveImage(message['media']);
+                              // String? caption = message['caption'];
+
+                              if (message['isMediaMessage'] == true) {
+                                String encryptedImageData = message['media'];
+                                print("Encrypted Image Data" +
+                                    encryptedImageData);
                                 imagePath =
-                                    await getLocalImagePath(message['media']);
+                                    await decryptImage(encryptedImageData);
+                                // print("message['media']" + message['media']);
+                                // imagePath =
+                                //     await getLocalImagePath(message['media']);
                               }
                               return ListTile(
                                 title: message['media'] == null ||
