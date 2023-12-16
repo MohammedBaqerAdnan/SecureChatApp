@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'CurvedAppBar.dart';
 
 //title for the appbar
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.title}) : super(key: key);
+class HomePageUI extends StatefulWidget {
+  const HomePageUI({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _HomePageUIState createState() => _HomePageUIState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageUIState extends State<HomePageUI> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,9 +81,10 @@ class _HomePageState extends State<HomePage> {
                               ),
                               onPressed: () {
                                 // Functionality to navigate to Encryption page
+                                Navigator.pushNamed(context, '/settings');
                               },
                               icon: const Icon(Icons.lock_rounded, size: 30),
-                              label: const Text('Encrypt Message',
+                              label: const Text('Setup',
                                   style: TextStyle(
                                       fontSize: 20, color: Colors.white)),
                             ),
@@ -103,10 +104,11 @@ class _HomePageState extends State<HomePage> {
                               ),
                               onPressed: () {
                                 // Functionality to navigate to Decryption page
+                                Navigator.pushNamed(context, '/chat');
                               },
                               icon: Icon(Icons.lock_open_rounded,
                                   size: 30, color: Colors.lightBlue.shade400),
-                              label: Text('Decrypt Message',
+                              label: Text('Start Chat',
                                   style: TextStyle(
                                       fontSize: 20,
                                       color: Colors.lightBlue.shade400)),
