@@ -6,8 +6,11 @@ import 'AppBarClipper.dart';
 class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
   //title of the AppBar
   final String title;
+  final Widget? action;
   //constructor for the CurvedAppBar take title as parameter
-  const CurvedAppBar({super.key, required this.title});
+  // const CurvedAppBar({super.key, required this.title , this.action}});
+  const CurvedAppBar({Key? key, required this.title, this.action})
+      : super(key: key);
 
 //Widget with preferred size
   @override
@@ -36,6 +39,8 @@ class CurvedAppBar extends StatelessWidget implements PreferredSizeWidget {
           centerTitle: true,
           //button at the right of the appbar
           actions: [
+            if (action != null)
+              action!, // if action is not null, add it to actions list
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
