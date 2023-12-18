@@ -1,5 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
+
+import 'CurvedAppBar.dart';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -45,6 +50,95 @@ class _ChatPageState extends State<ChatPage> {
         getMessages();
       });
     });
+  }
+
+  void sendWhatsAppMediaMessage(
+      String number, String message, XFile pickedFile) async {
+    // final picker = ImagePicker();
+    // final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      try {
+        final response = await http.post(
+          Uri.parse('${ipAddressForAPI}/send-media-message?userId=$_userId'),
+          headers: <String, String>{
+            'Content-Type': 'application/json;charset=UTF-8',
+          },
+          body: jsonEncode(<String, String>{
+            'num': number,
+            'message': message,
+            'mediaBase64': base64Image,
+          }),
+        );
+
+        print('Media message sent: ${response.body}');
+      } catch (e) {
+        print('Error occurred: $e');
+      }
+    } else {
+      print('No image selected.');
+    }
+  }
+
+  Future<String> decryptImage(String imageData) async {
+    //print length of image data
+    // print('imageData length: ${imageData.length}');
+    // print('imageData: $imageData');
+    try {
+      final response = await http.post(
+        Uri.parse('${ipAddressForAPI}/decrypt-file'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'imageData': imageData,
+        }),
+      );
+      if (response.statusCode == 200) {
+        String decryptedData = jsonDecode(response.body)['imageData'];
+        String localImagePath = await getLocalImagePath(decryptedData);
+        return localImagePath;
+      } else {
+        // If that response was not OK, throw an error.
+        throw Exception('Failed to load post');
+      }
+    } catch (e) {
+      return ('Error occurred: $e');
+    }
+  }
+
+  Future<String> getLocalImagePath(String base64Image) async {
+    // Create a hash of the base64 image string to use as a unique lookup key
+    var base64ImageHash = base64Image.hashCode;
+
+    // Check if the image in local storage is the same as the new image by comparing hashes
+    String? savedImagePath = prefs.getString(base64ImageHash.toString());
+
+    // If the image in local storage is the same as the new image, then we return the saved image path
+    if (savedImagePath != null && await File(savedImagePath).exists()) {
+      return savedImagePath;
+    }
+    // If the image in local storage is different from the new image, then we save the new image
+    else {
+      String newImagePath = await _saveAndGetImagePath(base64Image);
+      // Save the new image path
+      await prefs.setString(base64ImageHash.toString(), newImagePath);
+      return newImagePath;
+    }
+  }
+
+  Future<String> _saveAndGetImagePath(String base64Image) async {
+    Directory dir = await getApplicationDocumentsDirectory();
+    String imageName = Uuid().v1(); // Generating a unique id for image
+    String imagePath = '${dir.path}/$imageName.png'; // Define the path
+
+    // Let us decode the base64 string and write in the file
+    var bytes = base64Decode(base64Image);
+    await File(imagePath).writeAsBytes(bytes);
+
+    return imagePath;
   }
 
   void initializeTimezone() async {
@@ -180,21 +274,18 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     Map<String, List<Map<String, dynamic>>> groupedMessages = groupMessages();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat Page'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.clear_all),
-            onPressed: () {
-              // Add your message clearing logic here
-              _prefs!.remove('messages');
-              setState(() {
-                messages.clear();
-                globalMessageStreamController.add(messages);
-              });
-            },
-          ),
-        ],
+      appBar: CurvedAppBar(
+        title: 'Chat Page',
+        action: IconButton(
+          icon: const Icon(Icons.clear_all),
+          onPressed: () {
+            _prefs!.remove('messages');
+            setState(() {
+              messages.clear();
+              globalMessageStreamController.add(messages);
+            });
+          },
+        ),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -272,6 +363,7 @@ class _ChatPageState extends State<ChatPage> {
 
                   if (image != null) {
                     // Add your image sending logic here
+                    sendWhatsAppMediaMessage(_selectedContactNumber, '', image);
                   }
                 },
               ),
